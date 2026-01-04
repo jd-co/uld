@@ -142,7 +142,9 @@ class ProgressDisplay:
                 # Truncate long titles
                 if len(title) > 40:
                     title = title[:37] + "..."
-                description = f"[{progress.playlist_index}/{progress.playlist_count}] {title}"
+                description = (
+                    f"[{progress.playlist_index}/{progress.playlist_count}] {title}"
+                )
             else:
                 description = "Downloading"
 
@@ -178,7 +180,9 @@ class ProgressDisplay:
         )
 
         if self._live and self._progress:
-            self._live = Live(self._progress, console=self.console, refresh_per_second=4)
+            self._live = Live(
+                self._progress, console=self.console, refresh_per_second=4
+            )
             self._live.start()
 
     def show_metadata(self, info: TorrentInfo) -> None:
@@ -225,7 +229,11 @@ class ProgressDisplay:
         if info.formats:
             table.add_row("Qualities", ", ".join(info.formats[:5]))
         if info.description:
-            desc = info.description[:100] + "..." if len(info.description) > 100 else info.description
+            desc = (
+                info.description[:100] + "..."
+                if len(info.description) > 100
+                else info.description
+            )
             table.add_row("Description", desc)
 
         panel = Panel(table, title="Video Info", border_style="magenta")
@@ -284,7 +292,11 @@ class ProgressDisplay:
         table.add_column("Install", style="yellow")
 
         for engine in engines:
-            status = "[green]Available[/green]" if engine.available else "[red]Not installed[/red]"
+            status = (
+                "[green]Available[/green]"
+                if engine.available
+                else "[red]Not installed[/red]"
+            )
             version = engine.version or "-"
             install = engine.install_hint or "-"
             table.add_row(engine.name, status, version, install)

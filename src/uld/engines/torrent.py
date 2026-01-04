@@ -58,7 +58,7 @@ class TorrentEngine(BaseEngine):
         if not self.is_available():
             raise EngineNotAvailableError(
                 "torrent",
-                'pip install libtorrent  # or: pip install uld-cli',
+                "pip install libtorrent  # or: pip install uld-cli",
             )
 
         self._session: lt.session | None = None

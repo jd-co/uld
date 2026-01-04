@@ -79,7 +79,9 @@ class DownloadProgress(BaseModel):
 
     # Playlist-specific (video)
     playlist_index: int | None = Field(default=None, description="Current video index")
-    playlist_count: int | None = Field(default=None, description="Total videos in playlist")
+    playlist_count: int | None = Field(
+        default=None, description="Total videos in playlist"
+    )
     video_title: str | None = Field(default=None, description="Current video title")
 
     model_config = {"extra": "allow"}
@@ -140,7 +142,9 @@ class TorrentInfo(BaseModel):
     name: str = Field(..., description="Torrent name")
     info_hash: str = Field(..., description="Torrent info hash")
     total_size: int = Field(..., ge=0, description="Total size in bytes")
-    files: list[TorrentFile] = Field(default_factory=list, description="Files in torrent")
+    files: list[TorrentFile] = Field(
+        default_factory=list, description="Files in torrent"
+    )
     piece_length: int = Field(default=0, ge=0, description="Piece size in bytes")
     num_pieces: int = Field(default=0, ge=0, description="Number of pieces")
     comment: str | None = Field(default=None, description="Torrent comment")

@@ -79,7 +79,9 @@ class TestInputDetector:
     def test_is_magnet_valid(self) -> None:
         """Test _is_magnet with valid magnet link."""
         detector = InputDetector()
-        assert detector._is_magnet("magnet:?xt=urn:btih:dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c")
+        assert detector._is_magnet(
+            "magnet:?xt=urn:btih:dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c"
+        )
 
     def test_is_magnet_invalid(self) -> None:
         """Test _is_magnet with invalid input."""

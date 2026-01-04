@@ -15,7 +15,9 @@ class InputDetector:
     """Detects input type and returns the appropriate engine type."""
 
     # Magnet URI pattern
-    MAGNET_PATTERN = re.compile(r"^magnet:\?xt=urn:btih:[a-fA-F0-9]{40,}", re.IGNORECASE)
+    MAGNET_PATTERN = re.compile(
+        r"^magnet:\?xt=urn:btih:[a-fA-F0-9]{40,}", re.IGNORECASE
+    )
 
     # Magnet URI with base32 hash (more common now)
     MAGNET_BASE32_PATTERN = re.compile(
@@ -116,9 +118,7 @@ class InputDetector:
         """Check if string is a magnet URI."""
         if not s.lower().startswith("magnet:"):
             return False
-        return bool(
-            self.MAGNET_PATTERN.match(s) or self.MAGNET_BASE32_PATTERN.match(s)
-        )
+        return bool(self.MAGNET_PATTERN.match(s) or self.MAGNET_BASE32_PATTERN.match(s))
 
     def _is_torrent_file(self, s: str) -> bool:
         """Check if string is a path to a torrent file."""

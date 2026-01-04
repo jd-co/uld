@@ -37,6 +37,7 @@ def _listen_for_quit(stop_callback: object) -> None:
     try:
         if sys.platform == "win32":
             import msvcrt
+
             while True:
                 if msvcrt.kbhit() and msvcrt.getch().lower() == b"q":
                     stop_callback()  # type: ignore[operator]
@@ -44,12 +45,16 @@ def _listen_for_quit(stop_callback: object) -> None:
         else:
             import termios
             import tty
+
             fd = sys.stdin.fileno()
             old = termios.tcgetattr(fd)
             try:
                 tty.setcbreak(fd)
                 while True:
-                    if select.select([sys.stdin], [], [], 0.1)[0] and sys.stdin.read(1).lower() == "q":
+                    if (
+                        select.select([sys.stdin], [], [], 0.1)[0]
+                        and sys.stdin.read(1).lower() == "q"
+                    ):
                         stop_callback()  # type: ignore[operator]
                         return
             finally:
@@ -88,7 +93,9 @@ def main(
 
 @app.command()
 def download(
-    url: Annotated[str, typer.Argument(help="URL, magnet link, or torrent file to download")],
+    url: Annotated[
+        str, typer.Argument(help="URL, magnet link, or torrent file to download")
+    ],
     output: Annotated[
         Path | None,
         typer.Option(
@@ -339,7 +346,9 @@ def config() -> None:
     if cfg.upload_rate_limit > 0:
         console.print(f"  Upload limit: {cfg.upload_rate_limit} KB/s")
 
-    console.print("\n[dim]Configure via environment variables (ULD_*) or ~/.config/uld/config.toml[/dim]")
+    console.print(
+        "\n[dim]Configure via environment variables (ULD_*) or ~/.config/uld/config.toml[/dim]"
+    )
 
 
 # Allow running as `uld <url>` without subcommand

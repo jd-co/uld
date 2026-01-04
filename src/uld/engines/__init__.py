@@ -34,7 +34,9 @@ def get_engine(engine_type: EngineType) -> BaseEngine:
         # Future: from uld.engines.http import HTTPEngine
         from uld.exceptions import EngineNotAvailableError
 
-        raise EngineNotAvailableError("http", 'pip install "uld-cli[http]" (coming in v0.2)')
+        raise EngineNotAvailableError(
+            "http", 'pip install "uld-cli[http]" (coming in v0.2)'
+        )
     else:
         from uld.exceptions import EngineNotAvailableError
 

@@ -69,8 +69,13 @@ class TestVideoEngine:
         """Test auto-detection of playlist URLs."""
         engine = VideoEngine()
         # YouTube playlists
-        assert engine._is_playlist_url("https://youtube.com/playlist?list=PLxxx") is True
-        assert engine._is_playlist_url("https://www.youtube.com/watch?v=abc&list=PLxxx") is True
+        assert (
+            engine._is_playlist_url("https://youtube.com/playlist?list=PLxxx") is True
+        )
+        assert (
+            engine._is_playlist_url("https://www.youtube.com/watch?v=abc&list=PLxxx")
+            is True
+        )
         # Regular videos
         assert engine._is_playlist_url("https://youtube.com/watch?v=abc") is False
         assert engine._is_playlist_url("https://vimeo.com/123456") is False

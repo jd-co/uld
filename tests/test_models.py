@@ -46,7 +46,9 @@ class TestDownloadRequest:
 
     def test_expand_tilde(self) -> None:
         """Test tilde expansion in output_dir."""
-        request = DownloadRequest(url="magnet:?xt=urn:btih:abc", output_dir="~/Downloads")
+        request = DownloadRequest(
+            url="magnet:?xt=urn:btih:abc", output_dir="~/Downloads"
+        )
         assert str(request.output_dir).startswith(str(Path.home()))
 
     def test_seed_ratio_validation(self) -> None:

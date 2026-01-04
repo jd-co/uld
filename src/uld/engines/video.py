@@ -36,7 +36,7 @@ class VideoEngine(BaseEngine):
 
     # Quality presets
     QUALITY_FORMATS = {
-    "best": "bestvideo+bestaudio/best",
+        "best": "bestvideo+bestaudio/best",
         "worst": "worstvideo+worstaudio/worst",
         "1080p": "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
         "720p": "bestvideo[height<=720]+bestaudio/best[height<=720]",
@@ -49,7 +49,7 @@ class VideoEngine(BaseEngine):
         if not self.is_available():
             raise EngineNotAvailableError(
                 "video",
-                'pip install yt-dlp  # or: pip install uld-cli',
+                "pip install yt-dlp  # or: pip install uld-cli",
             )
         self._config = get_config()
 
@@ -79,7 +79,10 @@ class VideoEngine(BaseEngine):
 
         # Output template: add playlist index if downloading playlist
         if is_playlist:
-            outtmpl = str(request.output_dir / "%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s")
+            outtmpl = str(
+                request.output_dir
+                / "%(playlist_title)s/%(playlist_index)s - %(title)s.%(ext)s"
+            )
         else:
             outtmpl = str(request.output_dir / "%(title)s.%(ext)s")
 
@@ -256,7 +259,9 @@ class VideoEngine(BaseEngine):
         # YouTube playlist patterns
         if "youtube.com/playlist" in url_lower:
             return True
-        if "list=" in url_lower and ("youtube.com" in url_lower or "youtu.be" in url_lower):
+        if "list=" in url_lower and (
+            "youtube.com" in url_lower or "youtu.be" in url_lower
+        ):
             return True
         # Vimeo album/showcase
         if "vimeo.com/album" in url_lower or "vimeo.com/showcase" in url_lower:
