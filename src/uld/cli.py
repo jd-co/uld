@@ -32,13 +32,15 @@ app = typer.Typer(
 console = Console()
 
 
-def _listen_for_quit(stop_callback: object) -> None:
+def _listen_for_quit(
+    stop_callback: object, stop_event: threading.Event | None = None
+) -> None:
     """Listen for 'q' key in background. Calls stop_callback when pressed."""
     try:
         if sys.platform == "win32":
             import msvcrt
 
-            while True:
+            while not (stop_event and stop_event.is_set()):
                 if msvcrt.kbhit() and msvcrt.getch().lower() == b"q":
                     stop_callback()  # type: ignore[operator]
                     return
@@ -50,7 +52,7 @@ def _listen_for_quit(stop_callback: object) -> None:
             old = termios.tcgetattr(fd)
             try:
                 tty.setcbreak(fd)
-                while True:
+                while not (stop_event and stop_event.is_set()):
                     if (
                         select.select([sys.stdin], [], [], 0.1)[0]
                         and sys.stdin.read(1).lower() == "q"
@@ -184,13 +186,6 @@ def download(
         if "info_hash" in info:
             progress.print(f"Info hash: {info['info_hash']}", style="dim")
 
-    # Get engine
-    try:
-        engine = get_engine(engine_type)
-    except EngineNotAvailableError as e:
-        progress.show_error(e)
-        raise typer.Exit(1) from e
-
     # Build request
     request = DownloadRequest(
         url=url,
@@ -200,62 +195,98 @@ def download(
         playlist=playlist,
     )
 
-    # Run download with proper cancellation handling
-    with engine:
+    # Try engines with fallback (VIDEO → HTTP if yt-dlp fails)
+    engines_to_try = [engine_type]
+    if engine_type == EngineType.VIDEO:
+        engines_to_try.append(EngineType.HTTP)  # Fallback to HTTP
+
+    last_error: Exception | None = None
+
+    for try_engine_type in engines_to_try:
+        # Get engine
         try:
-            if not quiet:
-                console.print("[dim]Press q or Ctrl+C to stop or exit[/dim]")
-            progress.start(description="Starting download...", total=0)
+            engine = get_engine(try_engine_type)
+        except EngineNotAvailableError as e:
+            last_error = e
+            continue
 
-            async def run_download() -> None:
-                loop = asyncio.get_running_loop()
-                task = asyncio.current_task()
+        # Run download with proper cancellation handling
+        with engine:
+            try:
+                if not quiet:
+                    console.print("[dim]Press q or Ctrl+C to stop or exit[/dim]")
+                progress.start(description="Starting download...", total=0)
 
-                def trigger_stop() -> None:
-                    progress.print("\nStopping...", style="yellow")
-                    if task:
-                        loop.call_soon_threadsafe(task.cancel)
+                async def run_download(dl_engine: object) -> None:
+                    loop = asyncio.get_running_loop()
+                    task = asyncio.current_task()
+                    quit_stop_event = threading.Event()
 
-                # Start 'q' key listener in background
-                quit_thread = threading.Thread(
-                    target=_listen_for_quit, args=(trigger_stop,), daemon=True
-                )
-                quit_thread.start()
+                    def trigger_stop() -> None:
+                        progress.print("\nStopping...", style="yellow")
+                        if task:
+                            loop.call_soon_threadsafe(task.cancel)
 
-                signal.signal(signal.SIGINT, lambda *_: trigger_stop())
-                signal.signal(signal.SIGTERM, lambda *_: trigger_stop())
-
-                try:
-                    result = await engine.download(
-                        request, progress_callback=progress.update
+                    # Start 'q' key listener in background
+                    quit_thread = threading.Thread(
+                        target=_listen_for_quit,
+                        args=(trigger_stop, quit_stop_event),
+                        daemon=True,
                     )
-                    progress.stop()
-                    progress.show_complete(result)
-                    if not result.success:
-                        raise typer.Exit(1)
-                except asyncio.CancelledError:
-                    progress.stop()
-                    progress.print("Stopped.", style="yellow")
-                    raise SystemExit(0) from None
+                    quit_thread.start()
 
-            asyncio.run(run_download())
+                    signal.signal(signal.SIGINT, lambda *_: trigger_stop())
+                    signal.signal(signal.SIGTERM, lambda *_: trigger_stop())
 
-        except KeyboardInterrupt:
-            progress.stop()
-            progress.print("Stopped.", style="yellow")
-            raise SystemExit(0) from None
-        except ULDError as e:
-            progress.stop()
-            progress.show_error(e)
-            raise typer.Exit(1) from e
-        except SystemExit:
-            raise
-        except Exception as e:
-            progress.stop()
-            progress.show_error(e)
-            if verbose:
-                console.print_exception()
-            raise typer.Exit(1) from e
+                    try:
+                        result = await dl_engine.download(  # type: ignore[union-attr]
+                            request, progress_callback=progress.update
+                        )
+                        progress.stop()
+                        progress.show_complete(result)
+                        if not result.success:
+                            raise typer.Exit(1)
+                    except asyncio.CancelledError:
+                        progress.stop()
+                        progress.print("Stopped.", style="yellow")
+                        raise SystemExit(0) from None
+                    finally:
+                        # Signal quit thread to stop and restore terminal
+                        quit_stop_event.set()
+                        quit_thread.join(timeout=0.5)
+
+                asyncio.run(run_download(engine))
+                return  # Success, exit the function
+
+            except KeyboardInterrupt:
+                progress.stop()
+                progress.print("Stopped.", style="yellow")
+                raise SystemExit(0) from None
+            except SystemExit:
+                raise
+            except (ULDError, Exception) as e:
+                progress.stop()
+                last_error = e
+                # If this was VIDEO and we have HTTP fallback, try it
+                if (
+                    try_engine_type == EngineType.VIDEO
+                    and EngineType.HTTP in engines_to_try
+                ):
+                    if verbose:
+                        progress.print(
+                            "[dim]yt-dlp failed, trying direct download...[/dim]"
+                        )
+                    continue
+                # No more fallbacks, show error
+                progress.show_error(e)
+                if verbose:
+                    console.print_exception()
+                raise typer.Exit(1) from e
+
+    # All engines failed
+    if last_error:
+        progress.show_error(last_error)
+        raise typer.Exit(1) from last_error
 
 
 @app.command()
