@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "uld"
+name = "uld-cli"
 version = "1.0.0"
 description = "Unified Local Downloader - A single CLI for torrents, magnet links, videos, and direct downloads"
 readme = "README.md"
@@ -36,7 +36,7 @@ dependencies = [
 torrent = ["libtorrent>=2.0.11"]
 video = ["yt-dlp>=2025.12.8"]
 http = ["httpx>=0.28.1"]
-all = ["uld[torrent,video,http]"]
+all = ["uld-cli[torrent,video,http]"]
 dev = [
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
@@ -50,9 +50,9 @@ dev = [
 uld = "uld.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/sheikjaveed/uld"
-Repository = "https://github.com/sheikjaveed/uld"
-Issues = "https://github.com/sheikjaveed/uld/issues"
+Homepage = "https://github.com/jd-co/uld"
+Repository = "https://github.com/jd-co/uld"
+Issues = "https://github.com/jd-co/uld/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/uld"]
@@ -111,4 +111,10 @@ exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
+]
+
+[dependency-groups]
+dev = [
+    "build>=1.3.0",
+    "twine>=6.2.0",
 ]

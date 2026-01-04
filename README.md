@@ -2,7 +2,7 @@
 
 A single CLI tool for downloading content from multiple sources: torrents, magnet links, video platforms, and direct URLs.
 
-[![CI](https://github.com/sheikjaveed/uld/actions/workflows/ci.yml/badge.svg)](https://github.com/sheikjaveed/uld/actions/workflows/ci.yml)
+[![CI](https://github.com/jd-co/uld/actions/workflows/ci.yml/badge.svg)](https://github.com/jd-co/uld/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -24,30 +24,32 @@ Each has different CLI syntax, progress formats, and configuration. ULD provides
 ## Installation
 
 ```bash
-# Using pip
-pip install "uld[torrent]"
+# Install with torrent support
+pip install "uld-cli[torrent]"
+
+# Install with video support (YouTube, Vimeo, etc.)
+pip install "uld-cli[video]"
+
+# Install with all engines
+pip install "uld-cli[all]"
 
 # Using uv (recommended)
-uv add "uld[torrent]"
-
-# With all engines (torrent + video + http)
-pip install "uld[all]"
+uv add "uld-cli[all]"
 ```
 
 ## Quick Start
 
+### Torrents & Magnet Links
+
 ```bash
-# Download a torrent
+# Download a magnet link
 uld download magnet:?xt=urn:btih:...
 
-# Or just pass the URL directly
+# Or just pass the URL directly (auto-detects)
 uld magnet:?xt=urn:btih:...
 
 # Download a .torrent file
 uld download ./ubuntu-24.04.torrent
-
-# Specify output directory
-uld download magnet:... -o ~/Downloads/torrents
 
 # Download without seeding
 uld download magnet:... --no-seed
@@ -55,6 +57,37 @@ uld download magnet:... --no-seed
 # Get torrent info without downloading
 uld info magnet:?xt=urn:btih:...
 ```
+
+### Videos (YouTube, Vimeo, Twitter, etc.)
+
+```bash
+# Download a YouTube video (best quality)
+uld download "https://youtube.com/watch?v=..."
+
+# Download with specific quality
+uld download "https://youtube.com/watch?v=..." -Q 720p
+
+# Available qualities: best, worst, 1080p, 720p, 480p, 360p
+uld download "https://youtube.com/watch?v=..." -Q 1080p
+
+# Download entire playlist (auto-detected)
+uld download "https://youtube.com/playlist?list=..."
+
+# Get video info without downloading
+uld info "https://youtube.com/watch?v=..."
+```
+
+### Supported Video Platforms
+
+ULD uses yt-dlp under the hood, supporting 1000+ sites including:
+
+- YouTube (videos & playlists)
+- Vimeo
+- Twitter/X
+- Reddit
+- Instagram
+- TikTok
+- And many more...
 
 ## Commands
 
@@ -69,6 +102,8 @@ Options:
   -o, --output PATH      Output directory
   -r, --seed-ratio FLOAT Seed ratio target (default: 1.0)
   --no-seed              Don't seed after download
+  -Q, --quality TEXT     Video quality (best, 1080p, 720p, etc.)
+  -P, --playlist         Force playlist download
   -q, --quiet            Minimal output
   -v, --verbose          Verbose output
 ```
@@ -78,7 +113,11 @@ Options:
 Show metadata without downloading.
 
 ```bash
+# Torrent info
 uld info magnet:?xt=urn:btih:...
+
+# Video info
+uld info "https://youtube.com/watch?v=..."
 ```
 
 ### `uld engines`
@@ -86,16 +125,19 @@ uld info magnet:?xt=urn:btih:...
 List available download engines and their status.
 
 ```bash
-uld engines
+$ uld engines
+┏━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Engine  ┃ Status        ┃ Version    ┃ Install               ┃
+┡━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━┩
+│ torrent │ Available     │ 2.0.11.0   │ pip install "uld-cli" │
+│ video   │ Available     │ 2024.12.08 │ pip install "uld-cli" │
+│ http    │ Not installed │ -          │ Coming soon           │
+└─────────┴───────────────┴────────────┴───────────────────────┘
 ```
 
 ### `uld config`
 
 Show current configuration.
-
-```bash
-uld config
-```
 
 ## Configuration
 
@@ -129,47 +171,30 @@ export ULD_UPLOAD_RATE_LIMIT=500
 | `ULD_ENABLE_DHT` | `true` | Enable DHT |
 | `ULD_ENABLE_UPNP` | `true` | Enable UPnP |
 
-## Supported Sources
-
-### v0.1.0 (Current)
-
-- Magnet links (`magnet:?xt=urn:btih:...`)
-- Torrent files (`.torrent`)
-
-### Coming Soon (v0.2+)
-
-- YouTube and video platforms (via `yt-dlp`)
-- Direct HTTP/HTTPS downloads
-- More sources based on feedback
-
 ## Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/sheikjaveed/uld.git
+git clone https://github.com/jd-co/uld.git
 cd uld
 
 # Install with uv (recommended)
 uv sync --all-extras
 
 # Or with pip
-pip install -e ".[dev,torrent]"
+pip install -e ".[dev,torrent,video]"
+
+# The CLI command is still `uld`
+uld --help
 
 # Run tests
 uv run pytest
-# or: make test
 
 # Run linter
 uv run ruff check src tests
-# or: make lint
 
 # Format code
 uv run ruff format src tests
-# or: make format
-
-# Type check
-uv run mypy src
-# or: make typecheck
 ```
 
 ## Contributing
@@ -189,6 +214,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## Acknowledgments
 
 - [libtorrent](https://libtorrent.org/) - Torrent engine
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - Video download engine
 - [Rich](https://rich.readthedocs.io/) - Beautiful terminal output
 - [Typer](https://typer.tiangolo.com/) - CLI framework
 - [Pydantic](https://pydantic.dev/) - Data validation
