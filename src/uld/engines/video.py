@@ -297,12 +297,20 @@ class VideoEngine(BaseEngine):
         return "soundcloud.com" in url_lower and "/sets/" in url_lower
 
     def validate(self, url: str) -> bool:
-        """Check if this engine can handle the given URL."""
-        # Use detector's video platform list
+        """Check if this engine can handle the given URL.
+
+        Returns True for any HTTP/HTTPS URL that's not a direct file download
+        (since yt-dlp supports 1400+ sites).
+        """
         from uld.detector import InputDetector
+        from uld.models import EngineType
 
         detector = InputDetector()
-        return detector._is_video_platform(url)
+        try:
+            # Video engine handles URLs that detect as VIDEO type
+            return detector.detect(url) == EngineType.VIDEO
+        except Exception:
+            return False
 
     @classmethod
     def is_available(cls) -> bool:

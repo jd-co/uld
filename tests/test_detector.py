@@ -59,10 +59,11 @@ class TestInputDetector:
         assert result == EngineType.HTTP
 
     def test_detect_generic_http(self) -> None:
-        """Test detection of generic HTTP URL."""
+        """Test detection of generic HTTP URL goes to VIDEO (yt-dlp supports 1400+ sites)."""
         detector = InputDetector()
         result = detector.detect("https://example.com/some/path")
-        assert result == EngineType.HTTP
+        # Generic URLs without file extensions go to VIDEO engine (yt-dlp fallback)
+        assert result == EngineType.VIDEO
 
     def test_detect_empty_raises_error(self) -> None:
         """Test that empty input raises DetectionError."""
@@ -88,26 +89,6 @@ class TestInputDetector:
         detector = InputDetector()
         assert not detector._is_magnet("not a magnet link")
         assert not detector._is_magnet("magnet:invalid")
-
-    def test_is_video_platform_youtube(self) -> None:
-        """Test _is_video_platform with YouTube."""
-        detector = InputDetector()
-        assert detector._is_video_platform("https://www.youtube.com/watch?v=abc")
-        assert detector._is_video_platform("https://youtube.com/watch?v=abc")
-        assert detector._is_video_platform("https://youtu.be/abc")
-
-    def test_is_video_platform_others(self) -> None:
-        """Test _is_video_platform with other platforms."""
-        detector = InputDetector()
-        assert detector._is_video_platform("https://vimeo.com/123")
-        assert detector._is_video_platform("https://www.twitch.tv/channel")
-        assert detector._is_video_platform("https://tiktok.com/@user/video/123")
-
-    def test_is_video_platform_not_http(self) -> None:
-        """Test _is_video_platform rejects non-HTTP URLs."""
-        detector = InputDetector()
-        assert not detector._is_video_platform("youtube.com/watch?v=abc")
-        assert not detector._is_video_platform("ftp://youtube.com/video")
 
     def test_get_info_magnet(self, sample_magnet: str) -> None:
         """Test get_info extracts magnet info."""
