@@ -12,6 +12,8 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    # Skip on tag pushes (already passed on main)
+    if: "!startsWith(github.ref, 'refs/tags/')"
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +35,8 @@ jobs:
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    # Skip on tag pushes (already passed on main)
+    if: "!startsWith(github.ref, 'refs/tags/')"
     strategy:
       fail-fast: false
       matrix:
@@ -57,6 +61,8 @@ jobs:
     name: Build Package
     runs-on: ubuntu-latest
     needs: [lint, test]
+    # Always run unless a dependency failed
+    if: ${{ always() && !failure() }}
     steps:
       - uses: actions/checkout@v4
 
@@ -81,9 +87,9 @@ jobs:
   publish:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    needs: [lint, test, build]
-    # Only publish on version tags (v1.0.0, v1.0.1, etc.)
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build]
+    # Only publish on version tags when build succeeded
+    if: ${{ always() && needs.build.result == 'success' && startsWith(github.ref, 'refs/tags/v') }}
 
     steps:
       - uses: actions/checkout@v4
