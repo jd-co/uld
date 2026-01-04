@@ -47,7 +47,7 @@ dev = [
 ]
 
 [project.scripts]
-uld = "uld.cli:app"
+uld = "uld.cli:run"
 
 [project.urls]
 Homepage = "https://github.com/jd-co/uld"

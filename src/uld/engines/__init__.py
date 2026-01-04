@@ -31,12 +31,9 @@ def get_engine(engine_type: EngineType) -> BaseEngine:
 
         return VideoEngine()
     elif engine_type == EngineType.HTTP:
-        # Future: from uld.engines.http import HTTPEngine
-        from uld.exceptions import EngineNotAvailableError
+        from uld.engines.http import HTTPEngine
 
-        raise EngineNotAvailableError(
-            "http", 'pip install "uld-cli[http]" (coming in v0.2)'
-        )
+        return HTTPEngine()
     else:
         from uld.exceptions import EngineNotAvailableError
 
@@ -97,14 +94,27 @@ def get_available_engines() -> list[EngineStatus]:
             )
         )
 
-    # HTTP engine (future)
-    engines.append(
-        EngineStatus(
-            name="http",
-            engine_type=EngineType.HTTP,
-            available=False,
-            install_hint="Coming in v0.2",
+    # HTTP engine
+    try:
+        from uld.engines.http import HTTPEngine
+
+        engines.append(
+            EngineStatus(
+                name="http",
+                engine_type=EngineType.HTTP,
+                available=HTTPEngine.is_available(),
+                version=HTTPEngine.get_version(),
+                install_hint='pip install "uld-cli[http]"',
+            )
         )
-    )
+    except ImportError:
+        engines.append(
+            EngineStatus(
+                name="http",
+                engine_type=EngineType.HTTP,
+                available=False,
+                install_hint='pip install "uld-cli[http]"',
+            )
+        )
 
     return engines
