@@ -700,6 +700,18 @@ wheels = [
 ]
 
 [[package]]
+name = "libtorrent-windows-dll"
+version = "0.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "libtorrent" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/73/06/cb2fd5a6948aa1936ec6400c2478e04f65faaee6df750a5201026b419c11/libtorrent_windows_dll-0.0.3.tar.gz", hash = "sha256:84f0f4f8d80f36a8769eeed8b85aa03ed1a961fd44ff597d60771f63f77135d8", size = 1524559, upload-time = "2025-07-08T19:05:32.488Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/cf/0293a8daea4a0e89044f3f7289930046bf139d118b62bbe2d47b78a0bc9b/libtorrent_windows_dll-0.0.3-py3-none-any.whl", hash = "sha256:eac387522f70286fcad688c78c3f8e428c43fef3bd48f493bc4fb480d68ed366", size = 1532907, upload-time = "2025-07-08T19:05:30.741Z" },
+]
+
+[[package]]
 name = "markdown-it-py"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1398,21 +1410,19 @@ wheels = [
 
 [[package]]
 name = "uld-cli"
-version = "1.0.0"
+version = "1.0.3"
 source = { editable = "." }
 dependencies = [
+    { name = "libtorrent" },
+    { name = "libtorrent-windows-dll", marker = "sys_platform == 'win32'" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "rich" },
     { name = "typer" },
+    { name = "yt-dlp" },
 ]
 
 [package.optional-dependencies]
-all = [
-    { name = "httpx" },
-    { name = "libtorrent" },
-    { name = "yt-dlp" },
-]
 dev = [
     { name = "mypy" },
     { name = "pre-commit" },
@@ -1424,12 +1434,6 @@ dev = [
 http = [
     { name = "httpx" },
 ]
-torrent = [
-    { name = "libtorrent" },
-]
-video = [
-    { name = "yt-dlp" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -1440,7 +1444,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", marker = "extra == 'http'", specifier = ">=0.28.1" },
-    { name = "libtorrent", marker = "extra == 'torrent'", specifier = ">=2.0.11" },
+    { name = "libtorrent", specifier = ">=2.0.11" },
+    { name = "libtorrent-windows-dll", marker = "sys_platform == 'win32'", specifier = ">=0.0.3" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.1" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.5.1" },
     { name = "pydantic", specifier = ">=2.0.0" },
@@ -1451,10 +1456,9 @@ requires-dist = [
     { name = "rich", specifier = ">=13.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.14.10" },
     { name = "typer", specifier = ">=0.9.0" },
-    { name = "uld-cli", extras = ["torrent", "video", "http"], marker = "extra == 'all'" },
-    { name = "yt-dlp", marker = "extra == 'video'", specifier = ">=2025.12.8" },
+    { name = "yt-dlp", specifier = ">=2024.0.0" },
 ]
-provides-extras = ["torrent", "video", "http", "all", "dev"]
+provides-extras = ["http", "dev"]
 
 [package.metadata.requires-dev]
 dev = [

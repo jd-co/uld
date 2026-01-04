@@ -2,190 +2,225 @@
 
 A single CLI tool for downloading content from multiple sources: torrents, magnet links, video platforms, and direct URLs.
 
-[![CI](https://github.com/jd-co/uld/actions/workflows/ci.yml/badge.svg)](https://github.com/jd-co/uld/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI](https://img.shields.io/pypi/v/uld-cli.svg)](https://pypi.org/project/uld-cli/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Why ULD?
 
-Today, downloading content requires juggling multiple tools:
+Stop juggling multiple tools for different download types:
 
-- Torrent clients for torrents/magnet links
-- `yt-dlp` for YouTube/videos
-- `wget`/`curl`/`aria2` for direct files
+| Before | After |
+|--------|-------|
+| `qbittorrent` for torrents | Just use `uld` |
+| `yt-dlp` for videos | Just use `uld` |
+| `wget`/`curl` for files | Just use `uld` |
 
-Each has different CLI syntax, progress formats, and configuration. ULD provides:
+ULD auto-detects the URL type and uses the right engine automatically.
 
-- **Single interface** - One command for all download types
-- **Auto-detection** - Automatically routes to the right engine
-- **Unified progress** - Consistent progress display across all downloads
-- **Local-first** - Runs entirely on your machine, no cloud dependencies
+---
 
 ## Installation
 
 ```bash
-# Install with torrent support
-pip install "uld-cli[torrent]"
-
-# Install with video support (YouTube, Vimeo, etc.)
-pip install "uld-cli[video]"
-
-# Install with all engines
-pip install "uld-cli[all]"
-
-# Using uv (recommended)
-uv add "uld-cli[all]"
+pip install uld-cli
 ```
+
+That's it! Both video (yt-dlp) and torrent (libtorrent) support are included.
+
+**Using uv (faster):**
+```bash
+uv add uld-cli
+```
+
+---
 
 ## Quick Start
 
-### Torrents & Magnet Links
+### Step 1: Download anything
 
 ```bash
-# Download a magnet link
-uld download magnet:?xt=urn:btih:...
+# YouTube video
+uld "https://youtube.com/watch?v=dQw4w9WgXcQ"
 
-# Or just pass the URL directly (auto-detects)
-uld magnet:?xt=urn:btih:...
+# Magnet link
+uld "magnet:?xt=urn:btih:..."
 
-# Download a .torrent file
-uld download ./ubuntu-24.04.torrent
-
-# Download without seeding
-uld download magnet:... --no-seed
-
-# Get torrent info without downloading
-uld info magnet:?xt=urn:btih:...
+# Torrent file
+uld ./ubuntu-24.04.torrent
 ```
 
-### Videos (YouTube, Vimeo, Twitter, etc.)
+### Step 2: Watch the progress
+
+```
+Press q or Ctrl+C to stop or exit
+⠋ Downloading [████████████░░░░░░░░] 60% 125.0 MB 5.2 MB/s 0:02:30
+```
+
+### Step 3: Done!
+
+```
+✓ Download complete! Saved to: ~/Downloads/video.mp4
+Downloaded: 208.5 MB | Duration: 1m 23s | Avg speed: 2.5 MB/s
+```
+
+---
+
+## Usage Examples
+
+### Videos
 
 ```bash
-# Download a YouTube video (best quality)
-uld download "https://youtube.com/watch?v=..."
+# Best quality (default)
+uld "https://youtube.com/watch?v=..."
 
-# Download with specific quality
-uld download "https://youtube.com/watch?v=..." -Q 720p
+# Specific quality
+uld "https://youtube.com/watch?v=..." -Q 720p
 
-# Available qualities: best, worst, 1080p, 720p, 480p, 360p
-uld download "https://youtube.com/watch?v=..." -Q 1080p
+# Download entire playlist
+uld "https://youtube.com/playlist?list=..."
 
-# Download entire playlist (auto-detected)
-uld download "https://youtube.com/playlist?list=..."
-
-# Get video info without downloading
+# Just get info (no download)
 uld info "https://youtube.com/watch?v=..."
 ```
 
-### Supported Video Platforms
+**Playlist Progress:**
+```
+✓ [1/5] First Video Title 45.2 MB
+✓ [2/5] Second Video Title 32.1 MB
+⠋ [3/5] Third Video Title [████████░░░░] 45% 5.2 MB/s
+```
 
-ULD uses yt-dlp under the hood, supporting 1000+ sites including:
+> **Resume Support:** If you stop a playlist download (q or Ctrl+C) and run the same command again, it automatically skips already downloaded videos and continues from where it left off.
 
+### Torrents
+
+```bash
+# Magnet link
+uld "magnet:?xt=urn:btih:..."
+
+# Torrent file
+uld ./file.torrent
+
+# Download without seeding
+uld "magnet:..." --no-seed
+
+# Custom seed ratio
+uld "magnet:..." --seed-ratio 2.0
+
+# Just get torrent info
+uld info "magnet:?xt=urn:btih:..."
+```
+
+### Output Options
+
+```bash
+# Custom output directory
+uld "https://youtube.com/watch?v=..." -o ~/Videos
+
+# Quiet mode (errors only)
+uld "magnet:..." -q
+
+# Verbose mode (debug info)
+uld "magnet:..." -v
+```
+
+---
+
+## Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `uld <url>` | Download from URL (auto-detects type) |
+| `uld download <url>` | Same as above (explicit) |
+| `uld info <url>` | Show metadata without downloading |
+| `uld engines` | List available engines and status |
+| `uld config` | Show current configuration |
+| `uld --help` | Show help |
+
+### Download Options
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output` | `-o` | Output directory |
+| `--quality` | `-Q` | Video quality (best, 1080p, 720p, 480p, 360p, worst) |
+| `--playlist` | `-P` | Force playlist download |
+| `--seed-ratio` | `-r` | Torrent seed ratio (default: 1.0) |
+| `--no-seed` | | Don't seed after torrent download |
+| `--quiet` | `-q` | Minimal output |
+| `--verbose` | `-v` | Verbose output |
+
+---
+
+## Controls
+
+While downloading, you can:
+
+| Key | Action |
+|-----|--------|
+| `q` | Stop download and exit |
+| `Ctrl+C` | Stop download and exit |
+
+---
+
+## Configuration
+
+Set defaults via environment variables:
+
+```bash
+# Default download directory
+export ULD_DOWNLOAD_DIR=~/Downloads/uld
+
+# Default seed ratio (0 = no seeding)
+export ULD_SEED_RATIO=1.0
+
+# Rate limits in KB/s
+export ULD_DOWNLOAD_RATE_LIMIT=1000
+export ULD_UPLOAD_RATE_LIMIT=500
+```
+
+### All Settings
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ULD_DOWNLOAD_DIR` | `~/Downloads` | Default download directory |
+| `ULD_SEED_RATIO` | `1.0` | Seed ratio (0 = no seeding) |
+| `ULD_SEED_TIME` | `0` | Seed time in minutes |
+| `ULD_MAX_CONNECTIONS` | `200` | Max peer connections |
+| `ULD_DOWNLOAD_RATE_LIMIT` | `0` | Download limit KB/s (0 = unlimited) |
+| `ULD_UPLOAD_RATE_LIMIT` | `0` | Upload limit KB/s (0 = unlimited) |
+| `ULD_ENABLE_DHT` | `true` | Enable DHT for torrents |
+| `ULD_ENABLE_UPNP` | `true` | Enable UPnP |
+
+---
+
+## Supported Platforms
+
+### Video Sites (1000+ supported)
 - YouTube (videos & playlists)
 - Vimeo
 - Twitter/X
 - Reddit
 - Instagram
 - TikTok
-- And many more...
+- Twitch
+- And many more... (powered by yt-dlp)
 
-## Commands
+### Torrent
+- Magnet links
+- .torrent files (local or HTTP URLs)
 
-### `uld download <url>`
-
-Download content from a URL, magnet link, or torrent file.
-
-```bash
-uld download <url> [OPTIONS]
-
-Options:
-  -o, --output PATH      Output directory
-  -r, --seed-ratio FLOAT Seed ratio target (default: 1.0)
-  --no-seed              Don't seed after download
-  -Q, --quality TEXT     Video quality (best, 1080p, 720p, etc.)
-  -P, --playlist         Force playlist download
-  -q, --quiet            Minimal output
-  -v, --verbose          Verbose output
-```
-
-### `uld info <url>`
-
-Show metadata without downloading.
-
-```bash
-# Torrent info
-uld info magnet:?xt=urn:btih:...
-
-# Video info
-uld info "https://youtube.com/watch?v=..."
-```
-
-### `uld engines`
-
-List available download engines and their status.
-
-```bash
-$ uld engines
-┏━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Engine  ┃ Status        ┃ Version    ┃ Install               ┃
-┡━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━┩
-│ torrent │ Available     │ 2.0.11.0   │ pip install "uld-cli" │
-│ video   │ Available     │ 2024.12.08 │ pip install "uld-cli" │
-│ http    │ Not installed │ -          │ Coming soon           │
-└─────────┴───────────────┴────────────┴───────────────────────┘
-```
-
-### `uld config`
-
-Show current configuration.
-
-## Configuration
-
-Configure via environment variables (prefixed with `ULD_`):
-
-```bash
-# Set default download directory
-export ULD_DOWNLOAD_DIR=~/Downloads/uld
-
-# Set default seed ratio
-export ULD_SEED_RATIO=2.0
-
-# Disable seeding by default
-export ULD_SEED_RATIO=0
-
-# Set rate limits (KB/s)
-export ULD_DOWNLOAD_RATE_LIMIT=1000
-export ULD_UPLOAD_RATE_LIMIT=500
-```
-
-### Available Settings
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ULD_DOWNLOAD_DIR` | `~/Downloads` | Default download directory |
-| `ULD_SEED_RATIO` | `1.0` | Default seed ratio (0 = no seeding) |
-| `ULD_SEED_TIME` | `0` | Seed time in minutes (0 = use ratio) |
-| `ULD_MAX_CONNECTIONS` | `200` | Maximum peer connections |
-| `ULD_LISTEN_PORT_START` | `6881` | Start of port range |
-| `ULD_LISTEN_PORT_END` | `6891` | End of port range |
-| `ULD_ENABLE_DHT` | `true` | Enable DHT |
-| `ULD_ENABLE_UPNP` | `true` | Enable UPnP |
+---
 
 ## Development
 
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/jd-co/uld.git
 cd uld
 
-# Install with uv (recommended)
+# Install with dev dependencies
 uv sync --all-extras
-
-# Or with pip
-pip install -e ".[dev,torrent,video]"
-
-# The CLI command is still `uld`
-uld --help
 
 # Run tests
 uv run pytest
@@ -197,15 +232,7 @@ uv run ruff check src tests
 uv run ruff format src tests
 ```
 
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+---
 
 ## License
 
@@ -213,8 +240,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
+Built with these amazing projects:
 - [libtorrent](https://libtorrent.org/) - Torrent engine
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - Video download engine
-- [Rich](https://rich.readthedocs.io/) - Beautiful terminal output
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - Video engine
+- [Rich](https://rich.readthedocs.io/) - Terminal UI
 - [Typer](https://typer.tiangolo.com/) - CLI framework
 - [Pydantic](https://pydantic.dev/) - Data validation

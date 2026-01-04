@@ -4,7 +4,7 @@ A single CLI tool for downloading content from multiple sources:
 torrents, magnet links, video platforms, and direct URLs.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.3"
 __author__ = "Sheikh Javeed"
 
 from uld.exceptions import (

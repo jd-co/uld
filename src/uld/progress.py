@@ -36,6 +36,10 @@ class ProgressDisplay:
         self._live: Live | None = None
         self._task_id: TaskID | None = None
         self._current_state: str = ""
+        # Playlist tracking
+        self._current_playlist_index: int | None = None
+        self._last_video_title: str | None = None
+        self._last_video_size: int = 0
 
     def create_progress(self) -> Progress:
         """Create a Rich progress bar with download columns."""
@@ -68,11 +72,29 @@ class ProgressDisplay:
 
     def stop(self) -> None:
         """Stop the progress display."""
+        # Print last playlist video if applicable
+        if (
+            self._current_playlist_index is not None
+            and self._last_video_title
+            and self._live
+        ):
+            self._live.stop()
+            self._live = None
+            # Use playlist_count from last known value (approximate with index)
+            self.console.print(
+                f"[green]✓[/green] [{self._current_playlist_index}] {self._last_video_title[:50]} "
+                f"[dim]{_format_size(self._last_video_size)}[/dim]"
+            )
+
         if self._live:
             self._live.stop()
             self._live = None
         self._progress = None
         self._task_id = None
+        # Reset playlist tracking
+        self._current_playlist_index = None
+        self._last_video_title = None
+        self._last_video_size = 0
 
     def update(self, progress: DownloadProgress) -> None:
         """Update the progress display.
@@ -82,6 +104,28 @@ class ProgressDisplay:
         """
         if self.quiet or self._progress is None or self._task_id is None:
             return
+
+        # Check if playlist video changed - print completed video
+        if progress.playlist_index and progress.playlist_count:
+            if (
+                self._current_playlist_index is not None
+                and progress.playlist_index > self._current_playlist_index
+                and self._last_video_title
+            ):
+                # Previous video completed - print it
+                self._print_completed_video(
+                    self._current_playlist_index,
+                    progress.playlist_count,
+                    self._last_video_title,
+                    self._last_video_size,
+                )
+                # Reset progress bar for new video
+                self._progress.reset(self._task_id)
+
+            # Track current video
+            self._current_playlist_index = progress.playlist_index
+            self._last_video_title = progress.video_title
+            self._last_video_size = progress.total
 
         # Build description based on state and playlist info
         state = progress.state
@@ -116,6 +160,26 @@ class ProgressDisplay:
         else:
             # Unknown total, use percentage
             self._progress.update(self._task_id, completed=progress.percentage)
+
+    def _print_completed_video(
+        self, index: int, total: int, title: str, size: int
+    ) -> None:
+        """Print a completed video line above the progress bar."""
+        if self._live:
+            self._live.stop()
+
+        # Truncate title if needed
+        if len(title) > 50:
+            title = title[:47] + "..."
+
+        size_str = _format_size(size) if size > 0 else ""
+        self.console.print(
+            f"[green]✓[/green] [{index}/{total}] {title} [dim]{size_str}[/dim]"
+        )
+
+        if self._live and self._progress:
+            self._live = Live(self._progress, console=self.console, refresh_per_second=4)
+            self._live.start()
 
     def show_metadata(self, info: TorrentInfo) -> None:
         """Display torrent metadata.

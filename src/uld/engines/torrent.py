@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import sys
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -32,6 +34,11 @@ _libtorrent_available = False
 _libtorrent_version: str | None = None
 
 try:
+    # On Windows, import the DLL package first to load OpenSSL dependencies
+    if sys.platform == "win32":
+        with contextlib.suppress(ImportError):
+            import libtorrent_windows_dll  # noqa: F401
+
     import libtorrent as lt
 
     _libtorrent_available = True
@@ -51,7 +58,7 @@ class TorrentEngine(BaseEngine):
         if not self.is_available():
             raise EngineNotAvailableError(
                 "torrent",
-                'pip install python-libtorrent  # or: pip install "uld[torrent]"',
+                'pip install libtorrent  # or: pip install uld-cli',
             )
 
         self._session: lt.session | None = None

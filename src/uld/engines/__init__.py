@@ -34,7 +34,7 @@ def get_engine(engine_type: EngineType) -> BaseEngine:
         # Future: from uld.engines.http import HTTPEngine
         from uld.exceptions import EngineNotAvailableError
 
-        raise EngineNotAvailableError("http", 'pip install "uld[http]" (coming in v0.2)')
+        raise EngineNotAvailableError("http", 'pip install "uld-cli[http]" (coming in v0.2)')
     else:
         from uld.exceptions import EngineNotAvailableError
 
@@ -59,7 +59,7 @@ def get_available_engines() -> list[EngineStatus]:
                 engine_type=EngineType.TORRENT,
                 available=TorrentEngine.is_available(),
                 version=TorrentEngine.get_version(),
-                install_hint='pip install "uld[torrent]"',
+                install_hint='pip install "uld-cli[torrent]"',
             )
         )
     except ImportError:
@@ -68,7 +68,7 @@ def get_available_engines() -> list[EngineStatus]:
                 name="torrent",
                 engine_type=EngineType.TORRENT,
                 available=False,
-                install_hint='pip install "uld[torrent]"',
+                install_hint='pip install "uld-cli[torrent]"',
             )
         )
 
@@ -82,7 +82,7 @@ def get_available_engines() -> list[EngineStatus]:
                 engine_type=EngineType.VIDEO,
                 available=VideoEngine.is_available(),
                 version=VideoEngine.get_version(),
-                install_hint='pip install "uld[video]"',
+                install_hint='pip install "uld-cli[video]"',
             )
         )
     except ImportError:
@@ -91,7 +91,7 @@ def get_available_engines() -> list[EngineStatus]:
                 name="video",
                 engine_type=EngineType.VIDEO,
                 available=False,
-                install_hint='pip install "uld[video]"',
+                install_hint='pip install "uld-cli[video]"',
             )
         )
 

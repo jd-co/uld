@@ -49,7 +49,7 @@ class VideoEngine(BaseEngine):
         if not self.is_available():
             raise EngineNotAvailableError(
                 "video",
-                'pip install yt-dlp  # or: pip install "uld[video]"',
+                'pip install yt-dlp  # or: pip install uld-cli',
             )
         self._config = get_config()
 

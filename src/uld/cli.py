@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import select
 import signal
 import sys
+import threading
 from pathlib import Path
 from typing import Annotated
 
@@ -28,6 +30,32 @@ app = typer.Typer(
 )
 
 console = Console()
+
+
+def _listen_for_quit(stop_callback: object) -> None:
+    """Listen for 'q' key in background. Calls stop_callback when pressed."""
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+            while True:
+                if msvcrt.kbhit() and msvcrt.getch().lower() == b"q":
+                    stop_callback()  # type: ignore[operator]
+                    return
+        else:
+            import termios
+            import tty
+            fd = sys.stdin.fileno()
+            old = termios.tcgetattr(fd)
+            try:
+                tty.setcbreak(fd)
+                while True:
+                    if select.select([sys.stdin], [], [], 0.1)[0] and sys.stdin.read(1).lower() == "q":
+                        stop_callback()  # type: ignore[operator]
+                        return
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old)
+    except Exception:
+        pass  # Ctrl+C still works as fallback
 
 
 def version_callback(value: bool) -> None:
@@ -168,19 +196,27 @@ def download(
     # Run download with proper cancellation handling
     with engine:
         try:
+            if not quiet:
+                console.print("[dim]Press q or Ctrl+C to stop or exit[/dim]")
             progress.start(description="Starting download...", total=0)
 
             async def run_download() -> None:
                 loop = asyncio.get_running_loop()
                 task = asyncio.current_task()
 
-                def signal_handler(_sig: int, _frame: object) -> None:
+                def trigger_stop() -> None:
                     progress.print("\nStopping...", style="yellow")
                     if task:
                         loop.call_soon_threadsafe(task.cancel)
 
-                signal.signal(signal.SIGINT, signal_handler)
-                signal.signal(signal.SIGTERM, signal_handler)
+                # Start 'q' key listener in background
+                quit_thread = threading.Thread(
+                    target=_listen_for_quit, args=(trigger_stop,), daemon=True
+                )
+                quit_thread.start()
+
+                signal.signal(signal.SIGINT, lambda *_: trigger_stop())
+                signal.signal(signal.SIGTERM, lambda *_: trigger_stop())
 
                 try:
                     result = await engine.download(
