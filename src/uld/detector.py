@@ -12,7 +12,14 @@ from uld.models import EngineType
 
 
 class InputDetector:
-    """Detects input type and returns the appropriate engine type."""
+    """Detects input type and returns the appropriate engine type.
+
+    Detection priority:
+    1. Magnet links → TORRENT
+    2. .torrent files → TORRENT
+    3. Direct file extensions (.zip, .iso, etc.) → HTTP
+    4. Any other HTTP/HTTPS URL → VIDEO (yt-dlp supports 1400+ sites)
+    """
 
     # Magnet URI pattern
     MAGNET_PATTERN = re.compile(
@@ -24,40 +31,10 @@ class InputDetector:
         r"^magnet:\?xt=urn:btih:[a-zA-Z2-7]{32}", re.IGNORECASE
     )
 
-    # Video platform domains
-    VIDEO_PLATFORMS = frozenset(
-        {
-            "youtube.com",
-            "www.youtube.com",
-            "youtu.be",
-            "vimeo.com",
-            "www.vimeo.com",
-            "dailymotion.com",
-            "www.dailymotion.com",
-            "twitch.tv",
-            "www.twitch.tv",
-            "twitter.com",
-            "x.com",
-            "tiktok.com",
-            "www.tiktok.com",
-            "instagram.com",
-            "www.instagram.com",
-            "facebook.com",
-            "www.facebook.com",
-            "fb.watch",
-            "reddit.com",
-            "www.reddit.com",
-            "v.redd.it",
-            "streamable.com",
-            "soundcloud.com",
-            "www.soundcloud.com",
-            "bandcamp.com",
-        }
-    )
-
-    # File extensions that indicate direct downloads
+    # File extensions that indicate direct downloads (use HTTP engine)
     DIRECT_DOWNLOAD_EXTENSIONS = frozenset(
         {
+            # Archives
             ".zip",
             ".tar",
             ".gz",
@@ -65,17 +42,74 @@ class InputDetector:
             ".xz",
             ".7z",
             ".rar",
+            ".tgz",
+            ".tar.gz",
+            ".tar.bz2",
+            ".tar.xz",
+            # Disk images
             ".iso",
+            ".img",
+            # Installers
             ".exe",
             ".msi",
             ".dmg",
             ".deb",
             ".rpm",
             ".AppImage",
+            ".apk",
+            # Documents
             ".pdf",
             ".doc",
             ".docx",
-            ".apk",
+            ".xls",
+            ".xlsx",
+            ".ppt",
+            ".pptx",
+            # Data
+            ".csv",
+            ".json",
+            ".xml",
+            ".sql",
+            # Text/Code
+            ".txt",
+            ".md",
+            ".py",
+            ".js",
+            ".ts",
+            ".go",
+            ".rs",
+            ".java",
+            ".c",
+            ".cpp",
+            ".h",
+            ".sh",
+            ".yaml",
+            ".yml",
+            ".toml",
+            ".ini",
+            ".cfg",
+            ".conf",
+            # Images (direct download, not galleries)
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".gif",
+            ".svg",
+            ".webp",
+            ".ico",
+            ".bmp",
+            # Fonts
+            ".ttf",
+            ".otf",
+            ".woff",
+            ".woff2",
+            # Other binaries
+            ".bin",
+            ".dat",
+            ".dll",
+            ".so",
+            ".dylib",
+            ".whl",
         }
     )
 
@@ -104,13 +138,13 @@ class InputDetector:
         if self._is_torrent_file(input_str):
             return EngineType.TORRENT
 
-        # Check for video platforms
-        if self._is_video_platform(input_str):
-            return EngineType.VIDEO
-
-        # Check for direct URLs
-        if self._is_direct_url(input_str):
+        # Check for direct file downloads (by extension)
+        if self._is_direct_download(input_str):
             return EngineType.HTTP
+
+        # Any other HTTP/HTTPS URL → try yt-dlp (supports 1400+ sites)
+        if self._is_http_url(input_str):
+            return EngineType.VIDEO
 
         raise DetectionError(input_str)
 
@@ -132,41 +166,32 @@ class InputDetector:
             return path.exists() and path.is_file()
         return False
 
-    def _is_video_platform(self, s: str) -> bool:
-        """Check if URL is from a known video platform."""
+    def _is_direct_download(self, s: str) -> bool:
+        """Check if URL points to a direct file download (by extension)."""
         if not s.startswith(("http://", "https://")):
             return False
 
         try:
             parsed = urlparse(s)
-            domain = parsed.netloc.lower()
-            # Remove www. prefix for comparison if not in set
-            domain_without_www = domain.removeprefix("www.")
-            return domain in self.VIDEO_PLATFORMS or domain_without_www in {
-                d.removeprefix("www.") for d in self.VIDEO_PLATFORMS
-            }
-        except Exception:
-            return False
-
-    def _is_direct_url(self, s: str) -> bool:
-        """Check if string is a direct download URL."""
-        if not s.startswith(("http://", "https://")):
-            return False
-
-        try:
-            parsed = urlparse(s)
-            # Must have a valid netloc
             if not parsed.netloc:
                 return False
 
             # Check for known download extensions
             path_lower = parsed.path.lower()
             for ext in self.DIRECT_DOWNLOAD_EXTENSIONS:
-                if path_lower.endswith(ext):
+                if path_lower.endswith(ext.lower()):
                     return True
+            return False
+        except Exception:
+            return False
 
-            # Generic HTTP URL (could be anything)
-            return True
+    def _is_http_url(self, s: str) -> bool:
+        """Check if string is a valid HTTP/HTTPS URL."""
+        if not s.startswith(("http://", "https://")):
+            return False
+        try:
+            parsed = urlparse(s)
+            return bool(parsed.netloc)
         except Exception:
             return False
 
