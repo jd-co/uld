@@ -116,8 +116,8 @@ class VideoEngine(BaseEngine):
                 progress_state["speed"] = d.get("speed", 0) or 0
 
                 if progress_callback:
-                    total = progress_state["total"]
-                    downloaded = progress_state["downloaded"]
+                    total = int(progress_state["total"])
+                    downloaded = int(progress_state["downloaded"])
                     speed = progress_state["speed"]
 
                     percentage = (downloaded / total * 100) if total > 0 else 0

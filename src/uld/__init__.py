@@ -4,8 +4,11 @@ A single CLI tool for downloading content from multiple sources:
 torrents, magnet links, video platforms, and direct URLs.
 """
 
-__version__ = "1.0.5"
-__author__ = "Sheik Javeed"
+from importlib.metadata import metadata
+
+_meta = metadata("uld-cli")
+__version__ = _meta["Version"]
+__author__ = _meta["Author"]
 
 from uld.exceptions import (
     DetectionError,
