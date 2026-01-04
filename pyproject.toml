@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uld-cli"
-version = "1.0.4"
+version = "1.0.5"
 description = "Unified Local Downloader - A single CLI for torrents, magnet links, videos, and direct downloads"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-authors = [{ name = "Sheikh Javeed" }]
-keywords = ["torrent", "magnet", "downloader", "cli", "yt-dlp", "libtorrent"]
+authors = [{ name = "Sheik Javeed" }]
+keywords = ["torrent", "magnet", "downloader", "cli", "yt-dlp", "libtorrent", "youtube", "playlist", "wget", "curl", "http", "download-manager", "video-downloader"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
