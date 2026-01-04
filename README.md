@@ -8,13 +8,23 @@ A single CLI tool for downloading content from multiple sources: torrents, magne
 
 ## Why ULD?
 
-Stop juggling multiple tools for different download types:
+I got tired of switching between different tools every time I needed to download something:
+
+- Need a YouTube video? Fire up `yt-dlp` with its flags
+- Downloading a torrent? Open `qBittorrent` or use `libtorrent`
+- Just a zip file? Back to `wget` or `curl`
+- An ISO from a mirror? Different command again
+
+Each tool has its own syntax, options, and quirks to remember. I wanted **one command that just works** for everything.
+
+So I built ULD - paste any URL, and it figures out the rest.
 
 | Before | After |
 |--------|-------|
-| `qbittorrent` for torrents | Just use `uld` |
-| `yt-dlp` for videos | Just use `uld` |
-| `wget`/`curl` for files | Just use `uld` |
+| `yt-dlp "https://youtube.com/..."` | `uld <url>` |
+| `qbittorrent magnet:?xt=...` | `uld <url>` |
+| `wget https://example.com/file.zip` | `uld <url>` |
+| `curl -O https://...` | `uld <url>` |
 
 ULD auto-detects the URL type and uses the right engine automatically.
 
@@ -231,6 +241,39 @@ uv run ruff check src tests
 # Format code
 uv run ruff format src tests
 ```
+
+---
+
+## Contributing
+
+Contributions are welcome! Here's how to get started:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Make** your changes
+4. **Run** tests and linting:
+   ```bash
+   uv run pytest
+   uv run ruff check src tests
+   uv run ruff format src tests
+   ```
+5. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+6. **Push** to your branch (`git push origin feature/amazing-feature`)
+7. **Open** a Pull Request
+
+### Guidelines
+
+- Follow existing code style (enforced by ruff)
+- Add tests for new features
+- Update documentation as needed
+- Keep PRs focused on a single change
+
+### Ideas for Contributions
+
+- Bug fixes and improvements
+- Support for new download sources
+- Documentation improvements
+- Performance optimizations
 
 ---
 
