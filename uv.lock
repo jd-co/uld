@@ -1410,9 +1410,10 @@ wheels = [
 
 [[package]]
 name = "uld-cli"
-version = "1.0.6"
+version = "1.0.8"
 source = { editable = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "libtorrent" },
     { name = "libtorrent-windows-dll", marker = "sys_platform == 'win32'" },
     { name = "pydantic" },
@@ -1431,9 +1432,6 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
-http = [
-    { name = "httpx" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -1443,7 +1441,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "httpx", marker = "extra == 'http'", specifier = ">=0.28.1" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "libtorrent", specifier = ">=2.0.11" },
     { name = "libtorrent-windows-dll", marker = "sys_platform == 'win32'", specifier = ">=0.0.3" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.1" },
@@ -1458,7 +1456,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.9.0" },
     { name = "yt-dlp", specifier = ">=2024.0.0" },
 ]
-provides-extras = ["http", "dev"]
+provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [
