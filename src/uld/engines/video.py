@@ -120,7 +120,10 @@ class VideoEngine(BaseEngine):
                     downloaded = int(progress_state["downloaded"])
                     speed = progress_state["speed"]
 
-                    percentage = (downloaded / total * 100) if total > 0 else 0
+                    # Clamp percentage to 0-100 (estimates can be inaccurate)
+                    percentage = min(
+                        (downloaded / total * 100) if total > 0 else 0, 100.0
+                    )
                     eta = int((total - downloaded) / speed) if speed > 0 else None
 
                     # Get playlist info from yt-dlp info_dict
@@ -171,8 +174,24 @@ class VideoEngine(BaseEngine):
                         future.result(timeout=2.0)
                     raise
 
-            # Check if download raised an exception
-            future.result()
+            # Get result - now returns info dict with filename
+            info = future.result()
+
+            # Extract filename from info dict (more reliable than progress hook)
+            if info:
+                # Try multiple possible filename keys
+                requested_downloads = info.get("requested_downloads") or []
+                final_filename = (
+                    (
+                        requested_downloads[0].get("filepath")
+                        if requested_downloads
+                        else None
+                    )
+                    or info.get("_filename")
+                    or info.get("filename")
+                )
+                if final_filename:
+                    downloaded_file = Path(final_filename)
 
             duration = time.time() - start_time
 
@@ -210,10 +229,18 @@ class VideoEngine(BaseEngine):
         finally:
             executor.shutdown(wait=False)
 
-    def _run_download(self, url: str, ydl_opts: dict[str, Any]) -> None:
-        """Run yt-dlp download (sync, called from executor)."""
+    def _run_download(
+        self, url: str, ydl_opts: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Run yt-dlp download (sync, called from executor).
+
+        Returns:
+            Info dict from yt-dlp with download metadata including filename.
+        """
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+            # Use extract_info with download=True to get info dict back
+            # This is more reliable for getting the final filename
+            return ydl.extract_info(url, download=True)
 
     def get_info(self, url: str) -> dict[str, Any]:
         """Get video metadata without downloading."""
