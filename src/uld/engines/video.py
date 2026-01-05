@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import contextlib
+import shutil
 import threading
 import time
 from pathlib import Path
@@ -31,18 +32,46 @@ except ImportError:
     yt_dlp = None  # type: ignore[assignment]
 
 
+def _is_ffmpeg_available() -> bool:
+    """Check if ffmpeg is available in PATH."""
+    return shutil.which("ffmpeg") is not None
+
+
 class VideoEngine(BaseEngine):
     """Download engine for video platforms using yt-dlp."""
 
-    # Quality presets
-    QUALITY_FORMATS = {
+    # Quality presets (with ffmpeg - can merge separate video+audio streams)
+    QUALITY_FORMATS_FFMPEG = {
         "best": "bestvideo+bestaudio/best",
         "worst": "worstvideo+worstaudio/worst",
+        "8k": "bestvideo[height<=4320]+bestaudio/best[height<=4320]",
+        "4k": "bestvideo[height<=2160]+bestaudio/best[height<=2160]",
+        "2160p": "bestvideo[height<=2160]+bestaudio/best[height<=2160]",
+        "2k": "bestvideo[height<=1440]+bestaudio/best[height<=1440]",
+        "1440p": "bestvideo[height<=1440]+bestaudio/best[height<=1440]",
         "1080p": "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
         "720p": "bestvideo[height<=720]+bestaudio/best[height<=720]",
         "480p": "bestvideo[height<=480]+bestaudio/best[height<=480]",
         "360p": "bestvideo[height<=360]+bestaudio/best[height<=360]",
     }
+
+    # Quality presets (without ffmpeg - pre-merged formats only)
+    QUALITY_FORMATS_NO_FFMPEG = {
+        "best": "best",
+        "worst": "worst",
+        "8k": "best[height<=4320]",
+        "4k": "best[height<=2160]",
+        "2160p": "best[height<=2160]",
+        "2k": "best[height<=1440]",
+        "1440p": "best[height<=1440]",
+        "1080p": "best[height<=1080]",
+        "720p": "best[height<=720]",
+        "480p": "best[height<=480]",
+        "360p": "best[height<=360]",
+    }
+
+    # Default for backwards compatibility
+    QUALITY_FORMATS = QUALITY_FORMATS_FFMPEG
 
     def __init__(self) -> None:
         """Initialize the video engine."""
@@ -72,7 +101,13 @@ class VideoEngine(BaseEngine):
 
         # Build yt-dlp options
         quality = request.quality or "best"
-        format_str = self.QUALITY_FORMATS.get(quality, quality)
+
+        # Select format based on ffmpeg availability
+        if _is_ffmpeg_available():
+            format_str = self.QUALITY_FORMATS_FFMPEG.get(quality, quality)
+        else:
+            # Use pre-merged formats when ffmpeg is not available
+            format_str = self.QUALITY_FORMATS_NO_FFMPEG.get(quality, "best")
 
         # Auto-detect playlist URLs or use explicit flag
         is_playlist = request.playlist or self._is_playlist_url(request.url)

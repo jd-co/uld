@@ -227,7 +227,7 @@ class ProgressDisplay:
         if info.view_count:
             table.add_row("Views", f"{info.view_count:,}")
         if info.formats:
-            table.add_row("Qualities", ", ".join(info.formats[:5]))
+            table.add_row("Qualities", ", ".join(info.formats))
         if info.description:
             desc = (
                 info.description[:100] + "..."
