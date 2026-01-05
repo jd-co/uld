@@ -191,6 +191,18 @@ class VideoEngine(BaseEngine):
 
         ydl_opts["progress_hooks"] = [progress_hook]
 
+        # Send initial progress (0 speed) before download starts
+        if progress_callback:
+            progress_callback(
+                DownloadProgress(
+                    downloaded=0,
+                    total=0,
+                    speed=0.0,
+                    percentage=0,
+                    state="downloading",
+                )
+            )
+
         # Run download in executor (yt-dlp is sync)
         # Create a future we can cancel
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)

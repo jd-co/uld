@@ -86,6 +86,18 @@ class HTTPEngine(BaseEngine):
                 # Ensure output directory exists
                 request.output_dir.mkdir(parents=True, exist_ok=True)
 
+                # Send initial progress (0 speed) before download starts
+                if progress_callback:
+                    progress_callback(
+                        DownloadProgress(
+                            downloaded=0,
+                            total=total_size,
+                            speed=0.0,
+                            percentage=0,
+                            state="downloading",
+                        )
+                    )
+
                 # Download with progress tracking
                 downloaded = 0
                 last_update = time.time()

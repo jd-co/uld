@@ -132,7 +132,9 @@ class ProgressDisplay:
         description = "Downloading"
 
         if state == "fetching_metadata":
-            description = "Fetching metadata..."
+            peers = progress.peers or 0
+            speed = progress.speed_human if progress.speed > 0 else "0 B/s"
+            description = f"Fetching metadata ({peers} peers, {speed})"
         elif state == "seeding":
             description = "Seeding"
         elif state == "downloading":
