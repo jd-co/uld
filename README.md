@@ -32,13 +32,20 @@ ULD auto-detects the URL type and uses the right engine automatically.
 
 ## Installation
 
+### Prerequisites
+
+- **Python 3.10+** - [Installation Guide](https://www.geeksforgeeks.org/python/download-and-install-python-3-latest-version/)
+- **pip** - [Installation Guide](https://packaging.python.org/en/latest/tutorials/installing-packages/#ensure-you-can-run-pip-from-the-command-line)
+
+### Install ULD
+
 ```bash
 pip install uld-cli
 ```
 
 That's it! Both video (yt-dlp) and torrent (libtorrent) support are included.
 
-**Using uv (faster):**
+**Using [uv](https://docs.astral.sh/uv/getting-started/installation/) (faster):**
 ```bash
 uv add uld-cli
 ```
