@@ -229,6 +229,79 @@ export ULD_UPLOAD_RATE_LIMIT=500
 
 ---
 
+## Programmatic Usage
+
+You can use ULD as a library in your Python code:
+
+### Basic Download
+
+```python
+from uld import download
+
+# Download from any supported URL
+result = download("https://youtube.com/watch?v=dQw4w9WgXcQ")
+print(f"Saved to: {result.file_path}")
+print(f"Size: {result.total_downloaded} bytes")
+```
+
+### With Progress Callback
+
+```python
+from uld import download, DownloadProgress
+
+def on_progress(p: DownloadProgress):
+    print(f"{p.percentage:.1f}% - {p.speed_human}")
+
+result = download(
+    "https://youtube.com/watch?v=...",
+    output_dir="./videos",
+    quality="720p",
+    progress_callback=on_progress,
+)
+```
+
+### Get Metadata Without Downloading
+
+```python
+from uld import get_info
+
+# Video info
+info = get_info("https://youtube.com/watch?v=...")
+print(f"Title: {info['title']}")
+print(f"Duration: {info['duration']} seconds")
+
+# Torrent info
+info = get_info("magnet:?xt=urn:btih:...")
+print(f"Name: {info['name']}")
+print(f"Size: {info['total_size']} bytes")
+```
+
+### Check Available Engines
+
+```python
+from uld import get_available_engines
+
+for engine in get_available_engines():
+    status = "✓" if engine.available else "✗"
+    print(f"{status} {engine.name}: {engine.version or 'not installed'}")
+```
+
+### Torrent Options
+
+```python
+from uld import download
+
+result = download(
+    "magnet:?xt=urn:btih:...",
+    output_dir="./downloads",
+    seed_ratio=0,       # Don't seed after download
+    # seed_ratio=2.0,   # Seed until 2:1 ratio
+    # seed_time=30,     # Seed for 30 minutes
+)
+```
+
+---
+
 ## Development
 
 ```bash
