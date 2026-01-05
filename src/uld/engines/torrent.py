@@ -15,7 +15,6 @@ from uld.engines.base import BaseEngine, ProgressCallback
 from uld.exceptions import (
     DownloadError,
     EngineNotAvailableError,
-    MetadataFetchError,
     TorrentError,
 )
 from uld.models import (
@@ -50,7 +49,6 @@ except ImportError:
 class TorrentEngine(BaseEngine):
     """Download engine for torrents and magnet links using libtorrent."""
 
-    METADATA_TIMEOUT = 60  # seconds to wait for metadata
     UPDATE_INTERVAL = 0.5  # seconds between progress updates
 
     def __init__(self) -> None:
@@ -216,24 +214,23 @@ class TorrentEngine(BaseEngine):
         handle: lt.torrent_handle,
         progress_callback: ProgressCallback | None = None,
     ) -> None:
-        """Wait for torrent metadata to be fetched."""
-        start_time = time.time()
+        """Wait for torrent metadata to be fetched.
 
-        if progress_callback:
-            progress_callback(
-                DownloadProgress(
-                    downloaded=0,
-                    total=0,
-                    state="fetching_metadata",
-                )
-            )
-
+        No timeout - user can press q or Ctrl+C to stop.
+        """
         while not handle.status().has_metadata:
-            elapsed = time.time() - start_time
-            if elapsed > self.METADATA_TIMEOUT:
-                raise MetadataFetchError(
-                    handle.status().info_hash.to_bytes().hex(),
-                    timeout=self.METADATA_TIMEOUT,
+            status = handle.status()
+
+            # Update progress with peer info and speed
+            if progress_callback:
+                progress_callback(
+                    DownloadProgress(
+                        downloaded=0,
+                        total=0,
+                        speed=float(status.download_rate),
+                        state="fetching_metadata",
+                        peers=status.num_peers,
+                    )
                 )
 
             await asyncio.sleep(0.5)
@@ -389,12 +386,8 @@ class TorrentEngine(BaseEngine):
         handle = session.add_torrent(params)
 
         # Wait for metadata (only needed for magnet links)
-        timeout = 30
-        start = time.time()
+        # No timeout - user can Ctrl+C to stop
         while not handle.status().has_metadata:
-            if time.time() - start > timeout:
-                session.remove_torrent(handle)
-                raise MetadataFetchError(url, timeout=timeout)
             time.sleep(0.5)
 
         torrent_info = self._extract_torrent_info(handle)
