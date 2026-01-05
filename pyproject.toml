@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uld-cli"
-version = "1.0.9"
+version = "1.1.0"
 description = "Unified Local Downloader - A single CLI for torrents, magnet links, videos, and direct downloads"
 readme = "README.md"
 license = "MIT"
